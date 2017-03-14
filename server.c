@@ -29,10 +29,8 @@ void userExists(char *name){
 	char temp[100];
 	strcpy(parola,"");
 	while(fscanf(fisier, "%s", temp)>0){
-		printf("Membrii: %s\n", temp);
 		if(strcmp(temp, name)==0){
 			fscanf(fisier, "%s", parola);
-			printf("Parola: %s\n", parola);
 			break;
 		}
 		fscanf(fisier, "%s", temp);
@@ -41,7 +39,6 @@ void userExists(char *name){
 }
 
 void getID(int newSocket){
-	//free(alDoilea->bodyMessage);
 	alDoilea->bodyMessage=(char *)malloc(20);
 	strcpy(alDoilea->bodyMessage, "Dati user name:");
 	primul->tipMesaj='c';
@@ -55,15 +52,12 @@ void getID(int newSocket){
 	alDoilea->bodyMessage=(char *)malloc(primul->nrCaractere+1);
 	recv(newSocket, alDoilea->bodyMessage, (primul->nrCaractere+1), 0);
 
-	printf("ID: %s\n", alDoilea->bodyMessage);
-
 	strcpy(parola,"");
 	userExists(alDoilea->bodyMessage);
 
 	free(alDoilea->bodyMessage);
 }
 void getPassword(int newSocket){
-	//free(alDoilea->bodyMessage);
 	alDoilea->bodyMessage=(char *)malloc(20);
 	strcpy(alDoilea->bodyMessage, "Dati parola:");
 
@@ -77,10 +71,6 @@ void getPassword(int newSocket){
 	recv(newSocket, primul, sizeof(head), 0);
 	alDoilea->bodyMessage=(char *)malloc(primul->nrCaractere+1);
 	recv(newSocket, alDoilea->bodyMessage, (primul->nrCaractere+1), 0);
-
-	printf("Parola: %s\n", alDoilea->bodyMessage);
-
-	//free(alDoilea->bodyMessage);
 }	
 void *executeThread(void *socket){
 	int newSocket=*(int *)socket;
@@ -88,7 +78,6 @@ void *executeThread(void *socket){
 	getID(newSocket);
 
 	while(strcmp(parola, "")==0){
-		//free(alDoilea->bodyMessage);
 		alDoilea->bodyMessage=(char *)malloc(20);
 		strcpy(alDoilea->bodyMessage, "User-ul nu exista!");
 		primul->tipMesaj='e';
@@ -143,6 +132,18 @@ void *executeThread(void *socket){
 				send(allSocket[k], alDoilea->bodyMessage, (primul->nrCaractere+1),0);
 		}
 		free(alDoilea->bodyMessage);
+
+		int error=0;
+		socklen_t length = sizeof(error);
+		int retval = getsockopt(newSocket, SOL_SOCKET, SO_ERROR, &error, &length);
+		if(retval != 0){
+			printf("Socket problem!\n");
+			exit(1);
+		}
+		if(error != 0){
+			printf("Socket error!\n");
+			exit(1);
+		}
 	}	
 }
 int main(){
