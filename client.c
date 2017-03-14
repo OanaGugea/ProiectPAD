@@ -16,6 +16,9 @@ typedef struct _body{
 	char *bodyMessage; //mesajul propriu-zis
 }body;
 
+head *primul;
+body *alDoilea;
+
 int main(){
 	FILE *f;
 	int clientSocket;
@@ -26,8 +29,9 @@ int main(){
 	int port;
 	int lungime;
 	int count=0;
-	head *primul = (head *)malloc(sizeof(head));
-	body *alDoilea = (body *)malloc(sizeof(body));
+	pthread_t fir;
+	primul = (head *)malloc(sizeof(head));
+	alDoilea = (body *)malloc(sizeof(body));
 
 	f=fopen("client.txt","r");
 	fscanf(f,"%s", ip);
@@ -48,21 +52,20 @@ int main(){
 	//connect()
 	connect(clientSocket, (struct sockaddr *) &serverAddr, (sizeof serverAddr));
 
-	printf("Pentru iesire tastati <end>\n");
+	printf("\n--- Pentru iesire tastati <end> ---\n\n");
 
 	while(1){
-		//free(alDoilea->bodyMessage);
-
 		recv(clientSocket, primul, sizeof(head), 0);
 		alDoilea->bodyMessage=(char *)malloc(primul->nrCaractere+1);
 		recv(clientSocket, alDoilea->bodyMessage, (primul->nrCaractere+1), 0);
 
+		//mesaj de eroare
 		if(primul->tipMesaj=='e'){
 			printf("Mesaj de eroare: %s\n", alDoilea->bodyMessage);
-			//printf("Server: %s\n", alDoilea->bodyMessage);
 			printf("\n");
 			free(alDoilea->bodyMessage);
 		}
+		//cuvant de comanda
 		else if(primul->tipMesaj=='c'){
 			printf("Server: %s\n", alDoilea->bodyMessage);
 			printf("\n");
@@ -84,6 +87,7 @@ int main(){
 			
 			free(alDoilea->bodyMessage);
 		}
+		//mesaje din cadrul chat-ului
 		else{
 			printf("Server: %s\n", alDoilea->bodyMessage);
 			printf("\n");
@@ -92,7 +96,7 @@ int main(){
 			strcpy(buffer,"");
 			printf("Client: ");
 			scanf("%s", buffer);
-			//fgets(buffer, 100, stdin);
+			//fgets(buffer, 100, stdin); //pentru citirea mai multor cuvinte intr-o singura linie
 
 			lungime=strlen(buffer);
 			primul->tipMesaj='m';
@@ -106,42 +110,9 @@ int main(){
 
 			free(alDoilea->bodyMessage);
 
-			/*while(1){
-				strcpy(buffer,"");
-				printf("Client: ");
-				scanf("%s", buffer);
-				//fgets(buffer, 100, stdin);
-
-				lungime=strlen(buffer);
-				primul->tipMesaj='m';
-				primul->nrCaractere=lungime;
-
-				alDoilea->bodyMessage=(char *)malloc(lungime+1);
-				strcpy(alDoilea->bodyMessage,buffer);
-
-				send(clientSocket, primul, sizeof(head),0);
-				send(clientSocket, alDoilea->bodyMessage, (lungime+1),0);
-
-				free(alDoilea->bodyMessage);
-				recv(clientSocket, primul, sizeof(head), 0);
-				alDoilea->bodyMessage=(char *)malloc(primul->nrCaractere+1);
-				recv(clientSocket, alDoilea->bodyMessage, (primul->nrCaractere+1), 0);
-
-				printf("Server: %s\n", alDoilea->bodyMessage);
-				printf("\n");
-				free(alDoilea->bodyMessage);
-
-				ioctl(clientSocket, FIONREAD, &count);
-				if(count>0){
-					recv(clientSocket, primul, sizeof(head), 0);
-					alDoilea->bodyMessage=(char *)malloc(primul->nrCaractere+1);
-					recv(clientSocket, alDoilea->bodyMessage, (primul->nrCaractere+1), 0);
-					printf("Alt client: %s\n", alDoilea->bodyMessage);
-				}
-			}*/
-
 		}
 
+		//pentru oprirea conexiunii
 		if(strcmp(buffer, "end")==0){
 			printf("La revedere!\n");
 			exit(1);
